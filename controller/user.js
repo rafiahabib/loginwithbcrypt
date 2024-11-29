@@ -5,11 +5,10 @@ const register = async(req,res)=>{
    try{ 
     const user = new User(req.body);
     const {password}=req.body;
-    const salt=10;
+    const salt=bcrypt.genSalt(10);
     const hashpass =await bcrypt.hash(password,salt);
     user.password=hashpass;
     await user.save();
-    res.json({"message":"user register successfully",user:user})
     }catch(err){
         console.error(err)
         res.status(500).json({"message":"internal server error"})
