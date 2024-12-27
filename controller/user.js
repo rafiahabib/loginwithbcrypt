@@ -1,14 +1,17 @@
 const User=require('../model/user')
 const bcrypt=require('bcrypt')
+require('dotenv').config()
+const jwt=require('jsonwebtoken')
 const register = async(req,res)=>{
 
    try{ 
     const user = new User(req.body);
-    const {password}=req.body;
-    const salt=bcrypt.genSalt(10);
-    const hashpass =await bcrypt.hash(password,salt);
+   
+    const salt=await bcrypt.genSalt(10);
+    const hashpass =await bcrypt.hash( req.body.password,salt);
     user.password=hashpass;
     await user.save();
+    res.json({"message":"user added",user})
     }catch(err){
         console.error(err)
         res.status(500).json({"message":"internal server error"})
@@ -17,7 +20,7 @@ const register = async(req,res)=>{
 
 const getSingleuser = async(req,res)=>{
     try{
-    const id = req.params.id
+    const id = req.params.id//req.headers.authorization//const valid=jwt.verify(req.headers.authorization)//console
     const user = await User.findById(id)
     res.json({"message":"user get successfully",user})}
     catch(err){
@@ -49,22 +52,29 @@ const deleteuser=async(req,res)=>{
     }
 }
 
- const login=async(req,res)=>{
-    try{
-        
-        const user=await User.findOne({email:req.body.email})
-        if(user && user.password===req.body.password)
-            {
-            res.json({"message":"login succesfully"})
-         }
-        else{
-            res.json({"message":"invalid password"})
-        }}
-    catch(err){
-        console.error(err)
-        res.status(500).json({"message":"internal server error"})
+const login = async (req, res) => {
+    try {
+    
+      const user = await User.findOne({ email: req.body.email });
+   console.log(user)
+      if (user) {
+      const validate = await bcrypt.compare(req.body.password, user.password);
+     
+      if (validate) {
+        //jwt.verify
+        const token=await jwt.sign({userId:user._id,email:user.email},process.env.JWT_KEY)
+       
+        res.json({ message: "Login successfully",token:token });
+      } else {
+        res.status(401).json({ message: "Invalid password" });
+      }}
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Internal server error" });
     }
- }
+  };
+  
+
 
 
 
@@ -76,3 +86,6 @@ module.exports={
     updateuser,
     deleteuser
 }
+
+//how to send token from postmen
+//how to get token from req

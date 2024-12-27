@@ -1,9 +1,10 @@
 const express=require('express')
 const router=express.Router();
 const controller=require('../controller/user')
+const authorization=require('../middleware/auth');
 router.post('/create',controller.register)
-router.get('/:id',controller.getSingleuser);
-router.put('/update/:id',controller.updateuser);
-router.delete('/delete/:id',controller.deleteuser)
+router.get('/:id',authorization,controller.getSingleuser);
+router.put('/update/:id',authorization,controller.updateuser);
+router.delete('/delete/:id',authorization,controller.deleteuser)
 router.post('/login',controller.login)
 module.exports=router
